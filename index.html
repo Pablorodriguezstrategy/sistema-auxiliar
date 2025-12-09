@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SISTEMA AUXILIAR | Copiloto</title>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --card-bg: #121212;
+            --text-color: #e0e0e0;
+            --accent-color: #00E676; /* Verde Táctico (Todo OK) */
+            --warning-color: #FFD700; /* Amarillo Alerta */
+            --action-color: #00BFFF; /* Azul Eléctrico para movimientos */
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                linear-gradient(rgba(0, 20, 0, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 20, 0, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            padding-bottom: 80px;
+        }
+
+        /* HEADER */
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 15px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            color: #fff;
+            margin: 0;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px var(--accent-color);
+        }
+
+        .status-badge {
+            background: rgba(0, 230, 118, 0.1);
+            color: var(--accent-color);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            border: 1px solid var(--accent-color);
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        /* AUDIO PLAYER */
+        .audio-card {
+            background: var(--card-bg);
+            border: var(--glass-border);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+        .audio-title { font-size: 0.9rem; font-weight: bold; margin-bottom: 5px; display: block; color: #aaa; }
+        /* Reproductor estándar sin filtros extraños para asegurar compatibilidad */
+        audio { width: 100%; margin-top: 10px; }
+
+        /* PROTOCOLO DE EMERGENCIA */
+        .emergency-box {
+            background: #1a0505;
+            border-left: 4px solid #ff3b3b;
+            padding: 15px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+        }
+        .emergency-title { color: #ff3b3b; font-weight: bold; margin-bottom: 10px; display: block; }
+        .emergency-step { font-size: 0.9rem; margin-bottom: 5px; color: #ccc; }
+        .highlight { color: #fff; font-weight: bold; }
+
+        /* SELECTOR DE MODOS */
+        .mode-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .mode-btn {
+            background: #222;
+            border: 1px solid #444;
+            color: #888;
+            padding: 15px 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        .mode-btn.active {
+            background: rgba(0, 191, 255, 0.2);
+            border-color: var(--action-color);
+            color: var(--action-color);
+            box-shadow: 0 0 15px rgba(0, 191, 255, 0.3);
+        }
+
+        /* VISUALIZADOR TÁCTICO (EL NÚCLEO) */
+        .visualizer-container {
+            height: 300px;
+            background: #000;
+            border: 2px solid #333;
+            border-radius: 16px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+        }
+
+        /* HUD ELEMENTS */
+        .hud-grid {
+            position: absolute;
+            width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 1;
+        }
+        .target-center {
+            position: absolute;
+            width: 20px; height: 20px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        /* ELEMENTO ANIMADO (EL PUNTERO) */
+        .cursor-point {
+            width: 40px; height: 40px;
+            background: radial-gradient(circle, #fff 0%, var(--action-color) 40%, transparent 80%);
+            border-radius: 50%;
+            position: absolute;
+            z-index: 10;
+            box-shadow: 0 0 20px var(--action-color);
+            /* Animación definida por JS */
+        }
+
+        /* DESCRIPCIÓN DEL MODO */
+        .mode-info {
+            background: #111;
+            padding: 20px;
+            border-radius: 12px;
+            border-top: 2px solid var(--action-color);
+        }
+        .info-title { color: var(--action-color); font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; }
+        .info-desc { color: #ccc; font-size: 0.9rem; line-height: 1.5; }
+        
+        /* FOOTER Y DESCARGA */
+        .download-link {
+            display: block;
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            text-decoration: none;
+            font-size: 0.8rem;
+            border: 1px solid #333;
+            padding: 10px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .download-link:hover { color: #fff; border-color: #666; }
+
+        footer { margin-top: 30px; color: #444; font-size: 0.7rem; text-align: center; }
+
+        /* ANIMACIONES CSS */
+        
+        /* 1. EL OCHO (Figure 8) */
+        @keyframes figureEight {
+            0%   { transform: translate(0, 0); }
+            25%  { transform: translate(80px, -40px); }
+            50%  { transform: translate(0, 0); }
+            75%  { transform: translate(-80px, -40px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        /* 2. EL KIVIN (Lateral Rápido) */
+        @keyframes kivinSide {
+            0% { transform: translateX(-60px); }
+            50% { transform: translateX(60px); }
+            100% { transform: translateX(-60px); }
+        }
+
+        /* 4. ALFABETO (Texto que cambia) */
+        .alphabet-display {
+            font-size: 5rem;
+            font-weight: 900;
+            color: var(--action-color);
+            text-shadow: 0 0 30px var(--action-color);
+            font-family: sans-serif;
+            display: none;
+            z-index: 20;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <header>
+        <h1>SISTEMA AUXILIAR</h1>
+        <div class="status-badge">🟢 MODO MANUAL ACTIVADO</div>
+    </header>
+
+    <!-- 1. AUDIO BRIEFING (CORREGIDO) -->
+    <div class="audio-card">
+        <span class="audio-title">🎧 BRIEFING TÁCTICO (Escuchar en privado)</span>
+        <!-- Referencia directa al archivo sin parámetros extra -->
+        <audio controls>
+            <source src="audio_auxiliar.mp3" type="audio/mpeg">
+            Tu navegador no soporta el elemento de audio.
+        </audio>
+        <!-- Mensaje de ayuda si falla -->
+        <p style="font-size:0.7rem; color:#666; text-align:center; margin-top:10px;">
+            ¿No se escucha? <a href="audio_auxiliar.mp3" target="_blank" style="color:#888;">Abrir audio directamente</a>
+        </p>
+    </div>
+
+    <!-- 2. PROTOCOLO EMERGENCIA -->
+    <div class="emergency-box">
+        <span class="emergency-title">🚨 PROTOCOLO DE FALLO DE MOTOR</span>
+        <div class="emergency-step">1. ⛔ <strong>PROHIBIDO</strong> pedir perdón.</div>
+        <div class="emergency-step">2. ⬇️ Baja la mano/boca inmediatamente.</div>
+        <div class="emergency-step">3. 🗣️ Di: <em>"Descansa un segundo, quiero probar algo..."</em></div>
+        <div class="emergency-step">4. 👇 Selecciona un patrón abajo e IMÍTALO.</div>
+    </div>
+
+    <!-- 3. VISUALIZADOR -->
+    <div class="mode-selector">
+        <button class="mode-btn active" onclick="setMode('alfa')">PATRÓN ALFA<br>(Alfabeto)</button>
+        <button class="mode-btn" onclick="setMode('beta')">PATRÓN BETA<br>(Figura 8)</button>
+        <button class="mode-btn" onclick="setMode('gamma')">PATRÓN GAMMA<br>(Kivin/Lat)</button>
+    </div>
+
+    <div class="visualizer-container">
+        <div class="hud-grid"></div>
+        <div class="target-center"></div>
+        
+        <!-- ELEMENTOS ANIMADOS -->
+        <div id="cursor" class="cursor-point"></div>
+        <div id="text-display" class="alphabet-display">A</div>
+    </div>
+
+    <div class="mode-info">
+        <div id="info-title" class="info-title">PATRÓN ALFA: EL ALFABETO</div>
+        <div id="info-desc" class="info-desc">
+            <strong>TÉCNICA ORAL:</strong> Dibuja letras mayúsculas con la punta de la lengua sobre el clítoris.
+            <br><br>
+            <strong>POR QUÉ FUNCIONA:</strong> La imprevisibilidad de los trazos evita que ella se acostumbre a la sensación. Mantén un ritmo constante.
+        </div>
+    </div>
+
+    <!-- BOTÓN DE DESCARGA SECUNDARIO -->
+    <a href="guia_tactica.pdf" download class="download-link">
+        📂 DESCARGAR MANUAL DE VUELO COMPLETO (PDF)
+    </a>
+
+    <footer>
+        PROTOCOLO CLANDESTINO - SISTEMA DE APOYO v1.0
+    </footer>
+
+</div>
+
+<script>
+    let alphabetInterval;
+    const cursor = document.getElementById('cursor');
+    const textDisplay = document.getElementById('text-display');
+    const infoTitle = document.getElementById('info-title');
+    const infoDesc = document.getElementById('info-desc');
+    const btns = document.querySelectorAll('.mode-btn');
+
+    // Inicializar
+    setMode('alfa');
+
+    function setMode(mode) {
+        // Reset botones
+        btns.forEach(b => b.classList.remove('active'));
+        // Activar botón actual (en una app real buscaríamos por índice, aquí simple)
+        if(mode === 'alfa') btns[0].classList.add('active');
+        if(mode === 'beta') btns[1].classList.add('active');
+        if(mode === 'gamma') btns[2].classList.add('active');
+
+        // Limpiar estados
+        clearInterval(alphabetInterval);
+        cursor.style.display = 'block';
+        textDisplay.style.display = 'none';
+        cursor.style.animation = 'none';
+
+        if (mode === 'alfa') {
+            // MODO ALFABETO
+            cursor.style.display = 'none';
+            textDisplay.style.display = 'block';
+            infoTitle.innerText = "PATRÓN ALFA: EL ALFABETO";
+            infoDesc.innerHTML = "<strong>HERRAMIENTA:</strong> Punta de la Lengua.<br><br><strong>ACCIÓN:</strong> Dibuja las letras A-Z sobre el objetivo.<br><strong>EFECTO:</strong> Variación máxima. Evita el aburrimiento sensorial.";
+            
+            let letterCode = 65; // A
+            alphabetInterval = setInterval(() => {
+                textDisplay.innerText = String.fromCharCode(letterCode);
+                letterCode++;
+                if(letterCode > 90) letterCode = 65; // Reset a A
+            }, 1500); // Cambio cada 1.5s
+        } 
+        else if (mode === 'beta') {
+            // MODO FIGURA 8
+            infoTitle.innerText = "PATRÓN BETA: EL BUCLE INFINITO";
+            infoDesc.innerHTML = "<strong>HERRAMIENTA:</strong> Lengua o Dedo Índice.<br><strong>ACCIÓN:</strong> Traza un '8' constante alrededor del botón.<br><strong>EFECTO:</strong> Hipnosis rítmica. Úsalo cuando su respiración se acelere.";
+            // Hack para reiniciar animación
+            void cursor.offsetWidth; 
+            cursor.style.animation = "figureEight 2s linear infinite";
+        } 
+        else if (mode === 'gamma') {
+            // MODO KIVIN
+            infoTitle.innerText = "PATRÓN GAMMA: EL KIVIN";
+            infoDesc.innerHTML = "<strong>HERRAMIENTA:</strong> Parte plana de la lengua (Lado a Lado).<br><strong>ACCIÓN:</strong> Movimiento lateral rápido y corto. O 'Shallowing' con los dedos.<br><strong>EFECTO:</strong> Intensidad alta sin cosquillas.";
+            void cursor.offsetWidth;
+            cursor.style.animation = "kivinSide 0.8s ease-in-out infinite";
+        }
+    }
+</script>
+
+</body>
+</html>
